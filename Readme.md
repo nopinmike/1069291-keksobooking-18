@@ -1,7 +1,7 @@
 # Личный проект «Кексобукинг» [![Build status][travis-image]][travis-url]
 
 * Студент: [Mike Nopin](https://up.htmlacademy.ru/javascript/18/user/1069291).
-* Наставник: `Неизвестно`.
+* Наставник: `Юрий Матюхин`.
 
 ---
 
