@@ -94,22 +94,21 @@ function generateAds() {
 
 function renderPin(ad) {
   var pin = templatePin.cloneNode(true);
-  var computedStyle = getComputedStyle(pin);
   var img = pin.querySelector('img');
-  var sd = ad.location.y + 'px';
-  pin.style.left = ad.location.x - (img.getAttribute('width') / 2) + 'px';
-  pin.style.top = ad.location.y - img.getAttribute('height') + 'px';
+  pin.style.left = ad.location.x - 25 + 'px';
+  pin.style.top = ad.location.y - 70 + 'px';
   img.setAttribute('src', ad.author.avatar);
   img.setAttribute('alt', ad.offer.title);
   fragment.appendChild(pin);
-  console.log(computedStyle.width);
 }
 
-generateAds();
-map.classList.remove('.map--faded');
-
-for (var i = 0; i < ads.length; i++) {
-  renderPin(ads[i]);
+function init() {
+  generateAds();
+  for (var i = 0; i < ads.length; i++) {
+    renderPin(ads[i]);
+  }
+  mapPins.appendChild(fragment);
+  map.classList.remove('.map--faded');
 }
 
-mapPins.appendChild(fragment);
+init();
