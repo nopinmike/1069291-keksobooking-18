@@ -1,5 +1,6 @@
 'use strict';
 
+var AD_COUNT = 8;
 var AD_TITLES = [
   '1-к квартира, 41 м², 7/20 эт.',
   '2-к квартира, 44 м², 1/9 эт.',
@@ -10,16 +11,17 @@ var AD_TITLES = [
   '2-к квартира, 45 м², 1/5 эт.',
   '3-к квартира, 80.7 м², 12/14 эт.'
 ];
-var AD_ADDRESSES = ['600, 350', '400, 200', '300, 250', '300, 400', '200, 200', '350, 400', '350, 600', '200, 550'];
 var AD_PRICES = [1400, 1100, 1200, 1700, 1600, 1250, 1150, 1770];
-var AD_TYPES = ['flat', 'palace', 'house', 'bungalo', 'flat', 'bungalo', 'house', 'palace'];
+var AD_TYPES = ['palace', 'flat', 'house', 'bungalo'];
 var AD_ROOMS = [1, 2, 1, 1, 1, 1, 2, 3];
 var AD_GUESTS = [2, 2, 1, 3, 1, 2, 2, 4];
-var AD_CHECKINS = ['12:00', '13:00', '12:00', '14:00', '14:00', '12:00', '14:00', '13:00'];
-var AD_CHECKOUTS = ['13:00', '13:00', '14:00', '12:00', '14:00', '13:00', '12:00', '13:00'];
+var AD_CHECKINS = ['12:00', '13:00', '14:00'];
+var AD_CHECKOUTS = ['12:00', '13:00', '14:00'];
 var AD_DESCRIPTIONS = ['Описание 1', 'Описание 2', 'Описание 3', 'Описание 4', 'Описание 5', 'Описание 6'];
 var AD_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
 var AD_PHOTOS = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
+var PIN_WIDTH = 50;
+var PIN_HEIGHT = 70;
 
 var ads = [];
 var map = document.querySelector('.map');
@@ -31,19 +33,25 @@ function getRandomInRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function randomMixingArray(arr) {
+  var j;
+  var temp;
+
+  for (var i = arr.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    temp = arr[j];
+    arr[j] = arr[i];
+    arr[i] = temp;
+  }
+
+  return arr;
+}
+
 function getRandomArrayFeatures() {
-  var adFeaturesCopy = AD_FEATURES.concat();
-  var features = [];
+  randomMixingArray(AD_FEATURES);
   var length = getRandomInRange(1, AD_FEATURES.length);
 
-  for (var i = 1; i <= length; i++) {
-    var adFeaturesCopyLength = adFeaturesCopy.length;
-    var randomFeatureIndex = getRandomInRange(0, adFeaturesCopyLength - 1);
-    var randomFeature = adFeaturesCopy[randomFeatureIndex];
-    adFeaturesCopy.splice(randomFeatureIndex, 1);
-    features.push(randomFeature);
-  }
-  return features;
+  return AD_FEATURES.slice(0, length);
 }
 
 function getRandomArrayPhotos() {
@@ -63,7 +71,9 @@ function getRandomArrayPhotos() {
 
 function generateAds() {
 
-  for (var i = 0; i < AD_TITLES.length; i++) {
+  for (var i = 0; i < AD_COUNT; i++) {
+    var locationX = getRandomInRange(0, map.offsetWidth);
+    var locationY = getRandomInRange(130, 630);
     var ad = {
       'author': {
         'avatar': 'img/avatars/user0' + (i + 1) + '.png'
@@ -71,21 +81,21 @@ function generateAds() {
 
       'offer': {
         'title': AD_TITLES[i],
-        'address': AD_ADDRESSES[i],
+        'address': locationX + ', ' + locationY,
         'price': AD_PRICES[i],
-        'type': AD_TYPES[i],
+        'type': AD_TYPES[getRandomInRange(0, AD_TYPES.length - 1)],
         'rooms': AD_ROOMS[i],
         'guests': AD_GUESTS[i],
-        'checkin': AD_CHECKINS[i],
-        'checkout': AD_CHECKOUTS[i],
+        'checkin': AD_CHECKINS[getRandomInRange(0, AD_CHECKINS.length - 1)],
+        'checkout': AD_CHECKOUTS[getRandomInRange(0, AD_CHECKOUTS.length - 1)],
         'features': getRandomArrayFeatures(),
         'description': AD_DESCRIPTIONS[i],
         'photos': getRandomArrayPhotos()
       },
 
       'location': {
-        'x': getRandomInRange(0, map.offsetWidth),
-        'y': getRandomInRange(130, 630)
+        'x': locationX,
+        'y': locationY
       }
     };
     ads.push(ad);
@@ -95,8 +105,8 @@ function generateAds() {
 function renderPin(ad) {
   var pin = templatePin.cloneNode(true);
   var img = pin.querySelector('img');
-  pin.style.left = ad.location.x - 25 + 'px';
-  pin.style.top = ad.location.y - 70 + 'px';
+  pin.style.left = ad.location.x - PIN_WIDTH / 2 + 'px';
+  pin.style.top = ad.location.y - PIN_HEIGHT + 'px';
   img.setAttribute('src', ad.author.avatar);
   img.setAttribute('alt', ad.offer.title);
   fragment.appendChild(pin);
