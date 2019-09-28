@@ -18,6 +18,8 @@ var AD_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'condi
 var AD_PHOTOS = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
 var PIN_WIDTH = 50;
 var PIN_HEIGHT = 70;
+var WIDTH_PHOTO_IN_POPUP = 45;
+var HEIGHT_PHOTO_IN_POPUP = 40;
 
 function getRandomInRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -113,19 +115,100 @@ function renderPin(ad, template) {
   return pin;
 }
 
+function translationAdType(type) {
+  var translationType;
+
+  switch (type) {
+    case 'flat':
+      translationType = 'Квартира';
+      break;
+    case 'bungalo':
+      translationType = 'Бунгало';
+      break;
+    case 'house':
+      translationType = 'Дом';
+      break;
+    case 'palace':
+      translationType = 'Дворец';
+      break;
+  }
+
+  return translationType;
+}
+
+function setFeaturesForPopup(featureList, featuresNode) {
+  featuresNode.textContent = '';
+
+  for (var i = 0; i < featureList.length; i++) {
+    var feature = document.createElement('li');
+    feature.classList.add('popup__feature');
+    feature.classList.add('popup__feature--' + featureList[i]);
+    featuresNode.appendChild(feature);
+  }
+}
+
+function setPhotosForPopup(photosList, photosNode) {
+  photosNode.textContent = '';
+
+  for (var i = 0; i < photosList.length; i++) {
+    var photo = document.createElement('img');
+    photo.classList.add('popup__photo');
+    photo.setAttribute('width', WIDTH_PHOTO_IN_POPUP);
+    photo.setAttribute('height', HEIGHT_PHOTO_IN_POPUP);
+    photo.setAttribute('src', photosList[i]);
+    photo.setAttribute('alt', 'Фотография жилья');
+    photosNode.appendChild(photo);
+  }
+}
+
+function renderCard(ad, template) {
+  var card = template.cloneNode(true);
+  var title = card.querySelector('.popup__title');
+  var address = card.querySelector('.popup__text--address');
+  var price = card.querySelector('.popup__text--price');
+  var type = card.querySelector('.popup__type');
+  var capacity = card.querySelector('.popup__text--capacity');
+  var time = card.querySelector('.popup__text--time');
+  var features = card.querySelector('.popup__features');
+  var description = card.querySelector('.popup__description');
+  var photos = card.querySelector('.popup__photos');
+  var avatar = card.querySelector('.popup__avatar');
+
+  title.textContent = ad.offer.title;
+  address.textContent = ad.offer.address;
+  price.textContent = ad.offer.price + '₽/ночь';
+  type.textContent = translationAdType(ad.offer.type);
+  capacity.textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
+  time.textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
+  description.textContent = ad.offer.description;
+  avatar.setAttribute('src', ad.author.avatar);
+
+  setFeaturesForPopup(ad.offer.features, features);
+  setPhotosForPopup(ad.offer.photos, photos);
+
+  return card;
+}
+
 function init() {
   var map = document.querySelector('.map');
   var mapPins = map.querySelector('.map__pins');
+  var mapFilters = map.querySelector('.map__filters-container');
   var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
-  var fragment = document.createDocumentFragment();
+  var templateCard = document.querySelector('#card').content.querySelector('.map__card');
+  var fragmentForPins = document.createDocumentFragment();
+  var fragmentForCard = document.createDocumentFragment();
   var ads = generateAds(map);
+  var card = renderCard(ads[0], templateCard);
+
+  fragmentForCard.appendChild(card);
 
   for (var i = 0; i < ads.length; i++) {
-    var pin = renderPin(ads[i], templatePin, fragment);
-    fragment.appendChild(pin);
+    var pin = renderPin(ads[i], templatePin);
+    fragmentForPins.appendChild(pin);
   }
 
-  mapPins.appendChild(fragment);
+  map.insertBefore(fragmentForCard, mapFilters);
+  mapPins.appendChild(fragmentForPins);
   map.classList.remove('.map--faded');
 }
 
