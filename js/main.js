@@ -115,27 +115,6 @@ function renderPin(ad, template) {
   return pin;
 }
 
-function translationAdType(type) {
-  var translationType;
-
-  switch (type) {
-    case 'flat':
-      translationType = 'Квартира';
-      break;
-    case 'bungalo':
-      translationType = 'Бунгало';
-      break;
-    case 'house':
-      translationType = 'Дом';
-      break;
-    case 'palace':
-      translationType = 'Дворец';
-      break;
-  }
-
-  return translationType;
-}
-
 function setFeaturesForPopup(featureList, featuresNode) {
   featuresNode.textContent = '';
 
@@ -173,11 +152,12 @@ function renderCard(ad, template) {
   var description = card.querySelector('.popup__description');
   var photos = card.querySelector('.popup__photos');
   var avatar = card.querySelector('.popup__avatar');
+  var translations = {flat: 'Квартира', bungalo: 'Бунгало', house: 'Дом', palace: 'Дворец'};
 
   title.textContent = ad.offer.title;
   address.textContent = ad.offer.address;
   price.textContent = ad.offer.price + '₽/ночь';
-  type.textContent = translationAdType(ad.offer.type);
+  type.textContent = translations[ad.offer.type];
   capacity.textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
   time.textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
   description.textContent = ad.offer.description;
@@ -196,18 +176,15 @@ function init() {
   var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
   var templateCard = document.querySelector('#card').content.querySelector('.map__card');
   var fragmentForPins = document.createDocumentFragment();
-  var fragmentForCard = document.createDocumentFragment();
   var ads = generateAds(map);
   var card = renderCard(ads[0], templateCard);
-
-  fragmentForCard.appendChild(card);
 
   for (var i = 0; i < ads.length; i++) {
     var pin = renderPin(ads[i], templatePin);
     fragmentForPins.appendChild(pin);
   }
 
-  map.insertBefore(fragmentForCard, mapFilters);
+  map.insertBefore(card, mapFilters);
   mapPins.appendChild(fragmentForPins);
   map.classList.remove('.map--faded');
 }
