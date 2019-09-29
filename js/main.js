@@ -113,8 +113,32 @@ function renderPin(ad, template) {
   return pin;
 }
 
+function setDisabled(collection) {
+  collection.forEach(function (el) {
+    el.disabled = true;
+  });
+}
+
+function setDisabledForCollections() {
+  for (var i = 0; i < arguments.length; i++) {
+    setDisabled(arguments[i]);
+  }
+}
+
+function disabledPage(map, adForm) {
+  var mapFilters = document.querySelector('.map__filters');
+  var mapFiltersFieldsets = mapFilters.querySelectorAll('fieldset');
+  var mapFiltersSelects = mapFilters.querySelectorAll('select');
+  var adFormFieldsets = adForm.querySelectorAll('fieldset');
+
+  map.classList.add('map--faded');
+
+  setDisabledForCollections(adFormFieldsets, mapFiltersSelects, mapFiltersFieldsets);
+}
+
 function init() {
   var map = document.querySelector('.map');
+  var adForm = document.querySelector('.ad-form');
   var mapPins = map.querySelector('.map__pins');
   var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
   var fragment = document.createDocumentFragment();
@@ -126,7 +150,8 @@ function init() {
   }
 
   mapPins.appendChild(fragment);
-  map.classList.remove('.map--faded');
+
+  disabledPage(map, adForm);
 }
 
 init();
