@@ -18,6 +18,8 @@ var AD_FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'condi
 var AD_PHOTOS = ['http://o0.github.io/assets/images/tokyo/hotel1.jpg', 'http://o0.github.io/assets/images/tokyo/hotel2.jpg', 'http://o0.github.io/assets/images/tokyo/hotel3.jpg'];
 var PIN_WIDTH = 50;
 var PIN_HEIGHT = 70;
+var PIN_MAIN_WIDTH = 65;
+var PIN_MAIN_HEIGHT = 65;
 
 function getRandomInRange(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -64,11 +66,11 @@ function getRandomArrayPhotos() {
   return photos;
 }
 
-function generateAds(map) {
+function generateAds(mapWidth) {
   var ads = [];
 
   for (var i = 0; i < AD_COUNT; i++) {
-    var locationX = getRandomInRange(0 + PIN_WIDTH / 2, map.offsetWidth - PIN_WIDTH / 2);
+    var locationX = getRandomInRange(0 + PIN_WIDTH / 2, mapWidth - PIN_WIDTH / 2);
     var locationY = getRandomInRange(130 + PIN_HEIGHT, 630);
     var ad = {
       'author': {
@@ -113,36 +115,52 @@ function renderPin(ad, template) {
   return pin;
 }
 
-function setDisabled(collection) {
+function setDisabled(collection, isDisabled) {
   collection.forEach(function (el) {
-    el.disabled = true;
+    el.disabled = isDisabled;
   });
 }
 
 function setDisabledForCollections() {
-  for (var i = 0; i < arguments.length; i++) {
-    setDisabled(arguments[i]);
+  var isDisabled = arguments[arguments.length - 1];
+  for (var i = 0; i < arguments.length - 1; i++) {
+    setDisabled(arguments[i], isDisabled);
   }
 }
 
-function disabledPage(map, adForm) {
-  var mapFilters = document.querySelector('.map__filters');
+function disabledPage(map, adForm, isDisabled) {
+  var mapFilters = map.querySelector('.map__filters');
   var mapFiltersFieldsets = mapFilters.querySelectorAll('fieldset');
   var mapFiltersSelects = mapFilters.querySelectorAll('select');
   var adFormFieldsets = adForm.querySelectorAll('fieldset');
 
-  map.classList.add('map--faded');
+  if (isDisabled) {
+    map.classList.add('map--faded');
+    adForm.classList.add('ad-form--disabled');
+    setDisabledForCollections(adFormFieldsets, mapFiltersSelects, mapFiltersFieldsets, isDisabled);
+    return;
+  }
 
-  setDisabledForCollections(adFormFieldsets, mapFiltersSelects, mapFiltersFieldsets);
+  map.classList.remove('map--faded');
+  adForm.classList.remove('ad-form--disabled');
+  setDisabledForCollections(adFormFieldsets, mapFiltersSelects, mapFiltersFieldsets, isDisabled);
+}
+
+function getCurrentCoordinates(mapWidth, mapHeight) {
+  var xTest =  mapWidth / 2;
+  var yTest = mapHeight / 2;
 }
 
 function init() {
   var map = document.querySelector('.map');
   var adForm = document.querySelector('.ad-form');
   var mapPins = map.querySelector('.map__pins');
+  var mapPinMain = mapPins.querySelector('.map__pin--main');
   var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
   var fragment = document.createDocumentFragment();
-  var ads = generateAds(map);
+  var mapWidth = map.offsetWidth;
+  var mapHeight = map.offsetHeight;
+  var ads = generateAds(mapWidth);
 
   for (var i = 0; i < ads.length; i++) {
     var pin = renderPin(ads[i], templatePin, fragment);
@@ -151,7 +169,19 @@ function init() {
 
   mapPins.appendChild(fragment);
 
-  disabledPage(map, adForm);
+  disabledPage(map, adForm, true);
+
+  mapPinMain.addEventListener('mousedown', function () {
+    disabledPage(map, adForm, false);
+  });
+
+  mapPinMain.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === 13) {
+      disabledPage(map, adForm, false);
+    }
+  });
+
+  getCurrentCoordinates(mapWidth, mapHeight);
 }
 
 init();
