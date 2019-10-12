@@ -20,6 +20,7 @@ var adTitles = [
   '2-к квартира, 45 м², 1/5 эт.',
   '3-к квартира, 80.7 м², 12/14 эт.'
 ];
+
 var adTypes = ['palace', 'flat', 'house', 'bungalo'];
 var adCheckins = ['12:00', '13:00', '14:00'];
 var adCheckouts = ['12:00', '13:00', '14:00'];
