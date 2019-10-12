@@ -7,6 +7,8 @@
   var PIN_MAIN_WIDTH = 65;
   var PIN_MAIN_HEIGHT = 65;
 
+  var isDisabled = false;
+
   var adTitles = [
     '1-к квартира, 41 м², 7/20 эт.',
     '2-к квартира, 44 м², 1/9 эт.',
@@ -28,6 +30,7 @@
   var map = document.querySelector('.map');
   var mapFilters = map.querySelector('.map__filters-container');
 
+  var ads = [];
   var pins = [];
 
   function getRandomArrayFeatures(arr) {
@@ -53,7 +56,6 @@
   }
 
   function generateAds(mapWidth) {
-    var ads = [];
 
     for (var i = 0; i < AD_COUNT; i++) {
       var locationX = window.util.getRandomInRange(0 + PIN_WIDTH / 2, mapWidth - PIN_WIDTH / 2);
@@ -85,29 +87,43 @@
 
       ads.push(ad);
     }
-
-    return ads;
   }
 
   function setDisabled(formInteractiveElements) {
     formInteractiveElements.forEach(function (el) {
-      el.disabled = window.setData.isDisabled;
+      el.disabled = isDisabled;
     });
   }
 
-  window.setData = {
-    ads: generateAds(map.offsetWidth),
-    pins: pins,
-    PIN_WIDTH: 50,
-    PIN_HEIGHT: 70,
-    isDisabled: false,
+  generateAds(map.offsetWidth);
+
+  window.setting = {
+    getAds: function () {
+      return ads;
+    },
+    getPins: function () {
+      return pins;
+    },
+    setPins: function (value) {
+      pins = value;
+    },
+    getPinSizes: function () {
+      return [PIN_WIDTH, PIN_HEIGHT];
+    },
+    getStatusPage: function () {
+      return isDisabled;
+    },
+    setStatusPage: function (value) {
+      isDisabled = value;
+      this.togglePage();
+    },
     getCurrentCoordinates: function () {
       var x;
       var y;
 
       x = Math.round(parseInt(pinMain.style.left, 10) + PIN_MAIN_WIDTH / 2);
 
-      if (!window.setData.isDisabled) {
+      if (!isDisabled) {
         var styleAfterEl = window.getComputedStyle(pinMain, 'after');
         var positionAfter = parseInt(styleAfterEl.top, 10) + parseInt(styleAfterEl.height, 10);
 
@@ -118,21 +134,20 @@
       y = Math.round(parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT / 2);
       return x + ', ' + y;
     },
-    togglePage: function (form, isDisabledFlag) {
-      window.setData.isDisabled = isDisabledFlag;
+    togglePage: function () {
       var sliceMethod = Array.prototype.slice;
 
       var formInteractiveElements = []
         .concat(sliceMethod.call(mapFilters.querySelectorAll('fieldset, select')))
-        .concat(sliceMethod.call(form.querySelectorAll('fieldset')));
+        .concat(sliceMethod.call(adForm.querySelectorAll('fieldset')));
 
-      var methodName = window.setData.isDisabled ? 'add' : 'remove';
+      var methodName = isDisabled ? 'add' : 'remove';
       map.classList[methodName]('map--faded');
       adForm.classList[methodName]('ad-form--disabled');
       setDisabled(formInteractiveElements);
 
       pins.forEach(function (pin) {
-        pin.disabled = window.setData.isDisabled;
+        pin.disabled = isDisabled;
       });
     }
   };

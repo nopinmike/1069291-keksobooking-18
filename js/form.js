@@ -129,7 +129,7 @@
   window.form = {
     changeAddress: function () {
       var addressInput = adForm.querySelector('#address');
-      var addressValue = window.setData.getCurrentCoordinates();
+      var addressValue = window.setting.getCurrentCoordinates();
       addressInput.readOnly = true;
       addressInput.value = addressValue;
     }
