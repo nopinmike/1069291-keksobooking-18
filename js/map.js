@@ -67,10 +67,87 @@
     mapForAllPins.appendChild(fragmentForPins);
   }
 
+  function setPinMainCoordinates(shift) {
+    var x = shift.x;
+    var y = shift.y;
+
+    var statusPage = window.setting.getStatusPage();
+    var pinMainWidth = pinMain.offsetWidth;
+    var heightAfterEl = parseInt(window.getComputedStyle(pinMain, 'after').height, 10);
+    var pinMainHeight = (statusPage) ? pinMain.offsetHeight : pinMain.offsetHeight + heightAfterEl;
+
+    var left = pinMain.offsetLeft - x;
+    var top = pinMain.offsetTop - y;
+
+    if (left < (-pinMainWidth / 2)) {
+      left = -pinMainWidth / 2;
+    }
+
+    if (left > map.offsetWidth - pinMainWidth / 2) {
+      left = map.offsetWidth - pinMainWidth / 2;
+    }
+
+    if (top < 130 - pinMainHeight) {
+      top = 130 - pinMainHeight;
+    }
+
+    if (top > 630 - pinMainHeight) {
+      top = 630 - pinMainHeight;
+    }
+
+    pinMain.style.left = left + 'px';
+    pinMain.style.top = top + 'px';
+  }
+
   renderPinsOnMap(window.setting.getAds(), mapForPins);
 
-  pinMain.addEventListener('mousedown', function () {
+  pinMain.addEventListener('mousedown', function (evt) {
+    var startCoords = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+
+    var dragged = false;
+
+    function onMouseMove(moveEvt) {
+      moveEvt.preventDefault();
+      dragged = true;
+
+      var shift = {
+        x: startCoords.x - moveEvt.clientX,
+        y: startCoords.y - moveEvt.clientY
+      };
+
+      startCoords = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+
+      setPinMainCoordinates(shift);
+    }
+
+    function onMouseUp(upEvt) {
+      upEvt.preventDefault();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      if (dragged) {
+        var onClickPreventDefault = function (clickEvt) {
+          clickEvt.preventDefault();
+          pinMain.removeEventListener('click', onClickPreventDefault);
+        };
+        pinMain.addEventListener('click', onClickPreventDefault);
+      }
+
+      window.form.changeAddress();
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
     window.setting.setStatusPage(false);
+
     window.form.changeAddress();
   });
 

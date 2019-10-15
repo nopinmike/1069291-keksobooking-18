@@ -7,6 +7,11 @@
   var PIN_MAIN_WIDTH = 65;
   var PIN_MAIN_HEIGHT = 65;
 
+  var heightRestrictions = {
+    top: 130,
+    bottom: 630
+  };
+
   var isDisabled = false;
 
   var adTitles = [
@@ -59,7 +64,7 @@
 
     for (var i = 0; i < AD_COUNT; i++) {
       var locationX = window.util.getRandomInRange(0 + PIN_WIDTH / 2, mapWidth - PIN_WIDTH / 2);
-      var locationY = window.util.getRandomInRange(130 + PIN_HEIGHT, 630);
+      var locationY = window.util.getRandomInRange(heightRestrictions.top + PIN_HEIGHT, heightRestrictions.bottom);
       var ad = {
         'author': {
           'avatar': 'img/avatars/user0' + (i + 1) + '.png'
@@ -101,22 +106,36 @@
     getAds: function () {
       return ads;
     },
+
     getPins: function () {
       return pins;
     },
+
     setPins: function (value) {
       pins = value;
     },
+
     getPinSizes: function () {
       return [PIN_WIDTH, PIN_HEIGHT];
     },
+
+    getPinMainSizes: function () {
+      return [PIN_MAIN_WIDTH, PIN_MAIN_HEIGHT];
+    },
+
+    getHeightRestrictions: function () {
+      return heightRestrictions;
+    },
+
     getStatusPage: function () {
       return isDisabled;
     },
+
     setStatusPage: function (value) {
       isDisabled = value;
       this.togglePage();
     },
+
     getCurrentCoordinates: function () {
       var x;
       var y;
@@ -134,6 +153,7 @@
       y = Math.round(parseInt(pinMain.style.top, 10) + PIN_MAIN_HEIGHT / 2);
       return x + ', ' + y;
     },
+
     togglePage: function () {
       var sliceMethod = Array.prototype.slice;
 
