@@ -30,6 +30,21 @@
     }
   }
 
+  function checkingData(el, data) {
+    try {
+      if (data && typeof data !== 'object') {
+        return data;
+      } else if (typeof data === 'object' && data.length) {
+        return data;
+      }
+      el.remove();
+    } catch (err) {
+      el.remove();
+    }
+
+    return data;
+  }
+
   window.card = {
     renderCard: function (ad, template) {
       var card = template.cloneNode(true);
@@ -45,17 +60,17 @@
       var avatar = card.querySelector('.popup__avatar');
       var translations = {flat: 'Квартира', bungalo: 'Бунгало', house: 'Дом', palace: 'Дворец'};
 
-      title.textContent = ad.offer.title;
-      address.textContent = ad.offer.address;
-      price.textContent = ad.offer.price + '₽/ночь';
-      type.textContent = translations[ad.offer.type];
-      capacityCard.textContent = ad.offer.rooms + ' комнаты для ' + ad.offer.guests + ' гостей';
-      time.textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
-      description.textContent = ad.offer.description;
-      avatar.setAttribute('src', ad.author.avatar);
+      title.textContent = checkingData(title, ad.offer.title);
+      address.textContent = checkingData(address, ad.offer.address);
+      price.textContent = checkingData(price, ad.offer.price) + '₽/ночь';
+      type.textContent = translations[checkingData(type, ad.offer.type)];
+      capacityCard.textContent = checkingData(capacityCard, ad.offer.rooms) + ' комнаты для ' + checkingData(capacityCard, ad.offer.guests) + ' гостей';
+      time.textContent = 'Заезд после ' + checkingData(time, ad.offer.checkin) + ', выезд до ' + checkingData(time, ad.offer.checkout);
+      description.textContent = checkingData(description, ad.offer.description);
+      avatar.setAttribute('src', checkingData(avatar, ad.author.avatar));
 
-      setFeaturesForCard(ad.offer.features, features);
-      setPhotosForCard(ad.offer.photos, photos);
+      setFeaturesForCard(checkingData(features, ad.offer.features), features);
+      setPhotosForCard(checkingData(photos, ad.offer.photos), photos);
 
       return card;
     }

@@ -45,12 +45,15 @@
     }
   }
 
-  function renderPinsOnMap(ads, mapForAllPins) {
+  function renderPinsOnMap(ads) {
     var fragmentForPins = document.createDocumentFragment();
     var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
-    var pins = window.setting.getPins();
+    var pins = [];
     ads.forEach(function (ad) {
       var pin = window.pin.renderPin(ad, templatePin);
+      if (!pin) {
+        return;
+      }
       pin.disabled = true;
       pin.addEventListener('click', function () {
         onPinClick(ad);
@@ -64,7 +67,7 @@
       fragmentForPins.appendChild(pin);
     });
     window.setting.setPins(pins);
-    mapForAllPins.appendChild(fragmentForPins);
+    mapForPins.appendChild(fragmentForPins);
   }
 
   function setPinMainCoordinates(shift) {
@@ -99,66 +102,92 @@
     pinMain.style.top = top + 'px';
   }
 
-  renderPinsOnMap(window.setting.getAds(), mapForPins);
+  function showErrorMessage(message) {
+    var mainBlock = document.querySelector('main');
+    var templateError = document.querySelector('#error').content.querySelector('.error');
+    var blockTextError = templateError.querySelector('.error__message');
+    var buttonError = templateError.querySelector('.error__button');
 
-  pinMain.addEventListener('mousedown', function (evt) {
-    var startCoords = {
-      x: evt.clientX,
-      y: evt.clientY
-    };
-
-    var dragged = false;
-
-    function onMouseMove(moveEvt) {
-      moveEvt.preventDefault();
-      dragged = true;
-
-      var shift = {
-        x: startCoords.x - moveEvt.clientX,
-        y: startCoords.y - moveEvt.clientY
-      };
-
-      startCoords = {
-        x: moveEvt.clientX,
-        y: moveEvt.clientY
-      };
-
-      setPinMainCoordinates(shift);
+    function onReload(evt) {
+      evt.preventDefault();
+      window.fetch.load('https://js.dump.academy/keksobooking/data', onSuccess, onError);
+      buttonError.removeEventListener('click', onReload);
+      templateError.remove();
     }
 
-    function onMouseUp(upEvt) {
-      upEvt.preventDefault();
+    blockTextError.textContent = message;
+    mainBlock.appendChild(templateError);
 
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+    buttonError.addEventListener('click', onReload);
+  }
 
-      if (dragged) {
-        var onClickPreventDefault = function (clickEvt) {
-          clickEvt.preventDefault();
-          pinMain.removeEventListener('click', onClickPreventDefault);
+  function onError(message) {
+    showErrorMessage(message);
+  }
+
+  function onSuccess(data) {
+    renderPinsOnMap(data);
+
+    pinMain.addEventListener('mousedown', function (evt) {
+      var startCoords = {
+        x: evt.clientX,
+        y: evt.clientY
+      };
+
+      var dragged = false;
+
+      function onMouseMove(moveEvt) {
+        moveEvt.preventDefault();
+        dragged = true;
+
+        var shift = {
+          x: startCoords.x - moveEvt.clientX,
+          y: startCoords.y - moveEvt.clientY
         };
-        pinMain.addEventListener('click', onClickPreventDefault);
+
+        startCoords = {
+          x: moveEvt.clientX,
+          y: moveEvt.clientY
+        };
+
+        setPinMainCoordinates(shift);
       }
 
-      window.form.changeAddress();
-    }
+      function onMouseUp(upEvt) {
+        upEvt.preventDefault();
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
 
-    window.setting.setStatusPage(false);
+        if (dragged) {
+          var onClickPreventDefault = function (clickEvt) {
+            clickEvt.preventDefault();
+            pinMain.removeEventListener('click', onClickPreventDefault);
+          };
+          pinMain.addEventListener('click', onClickPreventDefault);
+        }
 
-    window.form.changeAddress();
-  });
+        window.form.changeAddress();
+      }
 
-  pinMain.addEventListener('keydown', function (evt) {
-    if (evt.keyCode === KEYCODE_ENTER) {
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+
       window.setting.setStatusPage(false);
+
       window.form.changeAddress();
-    }
-  });
+    });
+
+    pinMain.addEventListener('keydown', function (evt) {
+      if (evt.keyCode === KEYCODE_ENTER) {
+        window.setting.setStatusPage(false);
+        window.form.changeAddress();
+      }
+    });
+  }
 
   window.setting.setStatusPage(true);
+  window.fetch.load('https://js.dump.academy/keksobooking/dataa', onSuccess, onError);
   window.form.changeAddress();
 
 })();
