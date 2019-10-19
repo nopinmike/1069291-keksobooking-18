@@ -16,27 +16,20 @@
     mapBlock.insertBefore(card, filtersForMap);
   }
 
-  function removeCardOnMap() {
-    var card = map.querySelector('.map__card');
-    if (card) {
-      card.remove();
-    }
-  }
-
   function onPinClose() {
-    removeCardOnMap();
+    window.setting.removeCardOnMap();
     document.removeEventListener('keydown', onPinEsc);
   }
 
   function onPinEsc(evt) {
     if (evt.keyCode === KEYCODE_ESC) {
-      removeCardOnMap();
+      window.setting.removeCardOnMap();
       document.removeEventListener('keydown', onPinEsc);
     }
   }
 
   function onPinClick(ad) {
-    removeCardOnMap();
+    window.setting.removeCardOnMap();
     if (!window.setting.getStatusPage()) {
       renderCardOnMap(ad, mapFilters, map);
       var popupClose = map.querySelector('.map__card .popup__close');
@@ -49,6 +42,7 @@
     var fragmentForPins = document.createDocumentFragment();
     var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
     var pins = [];
+    var allowedAds = [];
     ads.forEach(function (ad) {
       var pin = window.pin.renderPin(ad, templatePin);
       if (!pin) {
@@ -63,9 +57,11 @@
           onPinClick(ad, pin);
         }
       });
+      allowedAds.push(ad);
       pins.push(pin);
       fragmentForPins.appendChild(pin);
     });
+    window.setting.setAds(allowedAds);
     window.setting.setPins(pins);
     mapForPins.appendChild(fragmentForPins);
   }
@@ -105,18 +101,19 @@
   function showErrorMessage(message) {
     var mainBlock = document.querySelector('main');
     var templateError = document.querySelector('#error').content.querySelector('.error');
-    var blockTextError = templateError.querySelector('.error__message');
-    var buttonError = templateError.querySelector('.error__button');
+    var blockError = templateError.cloneNode(true);
+    var blockTextError = blockError.querySelector('.error__message');
+    var buttonError = blockError.querySelector('.error__button');
 
     function onReload(evt) {
       evt.preventDefault();
-      window.fetch.load('https://js.dump.academy/keksobooking/data', onSuccess, onError);
+      window.backend.load(window.config.getConfig().loadUrl, onSuccess, onError);
       buttonError.removeEventListener('click', onReload);
-      templateError.remove();
+      blockError.remove();
     }
 
     blockTextError.textContent = message;
-    mainBlock.appendChild(templateError);
+    mainBlock.appendChild(blockError);
 
     buttonError.addEventListener('click', onReload);
   }
@@ -126,7 +123,6 @@
   }
 
   function onSuccess(data) {
-    renderPinsOnMap(data);
 
     pinMain.addEventListener('mousedown', function (evt) {
       var startCoords = {
@@ -170,6 +166,8 @@
         window.form.changeAddress();
       }
 
+      renderPinsOnMap(data);
+
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
 
@@ -187,7 +185,8 @@
   }
 
   window.setting.setStatusPage(true);
-  window.fetch.load('https://js.dump.academy/keksobooking/dataa', onSuccess, onError);
   window.form.changeAddress();
+  window.setting.setDefaultCoordinates(window.setting.getCurrentCoordinates());
+  window.backend.load(window.config.getConfig().loadUrl, onSuccess, onError);
 
 })();
