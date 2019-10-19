@@ -6,6 +6,9 @@
   var PIN_MAIN_WIDTH = 65;
   var PIN_MAIN_HEIGHT = 65;
 
+  var defaultCoordinates;
+  var defaultPinMainPosition;
+
   var heightRestrictions = {
     top: 130,
     bottom: 630
@@ -19,6 +22,7 @@
   var mapFilters = map.querySelector('.map__filters-container');
 
   var pins = [];
+  var ads = [];
 
   function setDisabled(formInteractiveElements) {
     formInteractiveElements.forEach(function (el) {
@@ -33,6 +37,14 @@
 
     setPins: function (value) {
       pins = value;
+    },
+
+    getAds: function () {
+      return ads;
+    },
+
+    setAds: function (value) {
+      ads = value;
     },
 
     getPinSizes: function () {
@@ -54,6 +66,35 @@
     setStatusPage: function (value) {
       isDisabled = value;
       this.togglePage();
+    },
+
+    removeCardOnMap: function () {
+      var card = map.querySelector('.map__card');
+      if (card) {
+        card.remove();
+      }
+    },
+
+    setDefaultCoordinates: function (value) {
+      var leftPositionPinMain = pinMain.offsetLeft;
+      var topPositionPinMain = pinMain.offsetTop;
+      defaultCoordinates = value;
+      defaultPinMainPosition = [leftPositionPinMain, topPositionPinMain];
+    },
+
+    resetPinMain: function () {
+      if (defaultCoordinates) {
+        var address = adForm.querySelector('#address');
+        address.value = defaultCoordinates;
+        pinMain.style.left = defaultPinMainPosition[0] + 'px';
+        pinMain.style.top = defaultPinMainPosition[1] + 'px';
+      }
+    },
+
+    removePinsOnMap: function () {
+      pins.forEach(function (pin) {
+        pin.remove();
+      });
     },
 
     getCurrentCoordinates: function () {
@@ -89,6 +130,58 @@
       pins.forEach(function (pin) {
         pin.disabled = isDisabled;
       });
+    },
+
+    resetPage: function () {
+      var fields = adForm.querySelectorAll('input, textarea');
+      var selects = adForm.querySelectorAll('select');
+      fields.forEach(function (field) {
+        if (field.name === 'description') {
+          field.value = '';
+        }
+        switch (field.type) {
+          case 'text':
+            if (field.hasAttribute('readonly')) {
+              break;
+            }
+            field.value = '';
+            break;
+          case 'number':
+            field.placeholder = '1000';
+            field.value = '';
+            break;
+          case 'checkbox':
+            field.checked = false;
+            break;
+          case 'file':
+            field.value = '';
+            break;
+        }
+      });
+      selects.forEach(function (select) {
+        switch (select.name) {
+          case 'type':
+            select.value = 'flat';
+            break;
+          case 'timein':
+            select.value = '12:00';
+            break;
+          case 'timeout':
+            select.value = '12:00';
+            break;
+          case 'rooms':
+            select.value = '1';
+            break;
+          case 'capacity':
+            select.value = '3';
+            break;
+        }
+      });
+
+      this.removeCardOnMap();
+      this.resetPinMain();
+      this.setStatusPage(true);
+      this.removePinsOnMap();
     }
   };
 

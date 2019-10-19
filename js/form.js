@@ -1,6 +1,7 @@
 'use strict';
 
 (function () {
+  var KEYCODE_ESC = 27;
 
   var adForm = document.querySelector('.ad-form');
   var capacity = adForm.querySelector('#capacity');
@@ -10,6 +11,7 @@
   var timeInForm = adForm.querySelector('#timein');
   var timeOutInForm = adForm.querySelector('#timeout');
   var rooms = adForm.querySelector('#room_number');
+  var mainBlock = document.querySelector('main');
 
   function checkCapacity() {
     var maxGuests = 0;
@@ -105,6 +107,60 @@
     }
   }
 
+  function onClickSuccessMessage() {
+    var successBlock = mainBlock.querySelector('.success');
+    if (successBlock) {
+      successBlock.remove();
+    }
+    document.removeEventListener('click', onClickSuccessMessage);
+  }
+
+  function onEscSuccessMessage(evt) {
+    if (evt.keyCode === KEYCODE_ESC) {
+      var successBlock = mainBlock.querySelector('.success');
+      if (successBlock) {
+        successBlock.remove();
+      }
+      document.removeEventListener('keydown', onEscSuccessMessage);
+    }
+  }
+
+  function showSuccessMessage() {
+    var templateSuccess = document.querySelector('#success').content.querySelector('.success');
+    var successBlock = templateSuccess.cloneNode(true);
+    mainBlock.appendChild(successBlock);
+    document.addEventListener('click', onClickSuccessMessage);
+    document.addEventListener('keydown', onEscSuccessMessage);
+  }
+
+  function showErrorMessage(message) {
+    var templateError = document.querySelector('#error').content.querySelector('.error');
+    var errorBlock = templateError.cloneNode(true);
+    var blockTextError = errorBlock.querySelector('.error__message');
+    var buttonError = errorBlock.querySelector('.error__button');
+
+    function onReload(evt) {
+      evt.preventDefault();
+      window.backend.save(window.config.getConfig().saveUrl, new FormData(adForm), onSuccess, onError);
+      buttonError.removeEventListener('click', onReload);
+      errorBlock.remove();
+    }
+
+    blockTextError.textContent = message;
+    mainBlock.appendChild(errorBlock);
+
+    buttonError.addEventListener('click', onReload);
+  }
+
+  function onSuccess() {
+    window.setting.resetPage();
+    showSuccessMessage();
+  }
+
+  function onError(message) {
+    showErrorMessage(message);
+  }
+
   capacity.addEventListener('change', function () {
     checkCapacity();
   });
@@ -125,6 +181,11 @@
 
   checkCapacity();
   onCheckPrice();
+
+  adForm.addEventListener('submit', function (evt) {
+    evt.preventDefault();
+    window.backend.save(window.config.getConfig().saveUrl, new FormData(adForm), onSuccess, onError);
+  });
 
   window.form = {
     changeAddress: function () {
