@@ -180,7 +180,7 @@
   window.form = {
     changeAddress: function () {
       var addressInput = adForm.querySelector('#address');
-      var addressValue = window.page.getCurrentCoordinates(pinMain);
+      var addressValue = window.setting.getCurrentCoordinates(pinMain);
       addressInput.readOnly = true;
       addressInput.value = addressValue;
     }

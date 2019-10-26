@@ -41,6 +41,16 @@
   }
 
   window.filter = {
+    resetFilters: function () {
+      Object.keys(filters).forEach(function (filter) {
+        filters[filter] = 'any';
+      });
+
+      Object.keys(filterFeatures).forEach(function (filter) {
+        filterFeatures[filter] = false;
+      });
+    },
+
     setFilter: function (key, value) {
       filters[key] = value;
     },
@@ -50,7 +60,7 @@
     },
 
     countPins: function (ads, pinMain) {
-      var currentCoordinatesPinMain = window.page.getCurrentCoordinates(pinMain).split(', ').map(function (el) {
+      var currentCoordinatesPinMain = window.setting.getCurrentCoordinates(pinMain).split(', ').map(function (el) {
         return parseInt(el, 10);
       });
 

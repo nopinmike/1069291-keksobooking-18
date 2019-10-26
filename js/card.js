@@ -46,6 +46,13 @@
   }
 
   window.card = {
+    removeCardOnMap: function () {
+      var card = document.querySelector('.map__card');
+      if (card) {
+        card.remove();
+      }
+    },
+
     renderCard: function (ad, template) {
       var card = template.cloneNode(true);
       var title = card.querySelector('.popup__title');
