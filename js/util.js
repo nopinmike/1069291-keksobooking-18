@@ -1,8 +1,16 @@
 'use strict';
 
 (function () {
+  var lastTimeout;
 
   window.util = {
+    debounce: function (fun, interval) {
+      if (lastTimeout) {
+        clearTimeout(lastTimeout);
+      }
+      lastTimeout = setTimeout(fun, interval);
+    },
+
     getRandomInRange: function (min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     },

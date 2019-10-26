@@ -2,8 +2,6 @@
 
 (function () {
 
-  var statusPage = false;
-
   var selectNameToValue = {
     type: 'flat',
     timein: '12:00',
@@ -24,10 +22,22 @@
   }
 
   function resetPage(pins, adForm, map) {
+    var selectFilters = map.querySelectorAll('.map__filter');
+    var featuresFilters = map.querySelectorAll('input[name="features"]');
     var fields = adForm.querySelectorAll('input, textarea');
     var selects = adForm.querySelectorAll('select');
     var filterMethod = [].filter;
     var findMethod = [].find;
+
+    selectFilters.forEach(function (filter) {
+      filter.value = 'any';
+    });
+
+    featuresFilters.forEach(function (filter) {
+      filter.checked = false;
+    });
+
+    window.filter.resetFilters();
 
     filterMethod.call(fields, function (field) {
       return field.type === 'text' || field.type === 'number' || field.type === 'file';
@@ -49,7 +59,7 @@
       select.value = selectNameToValue[select.name];
     });
 
-    window.page.removeCardOnMap(map);
+    window.card.removeCardOnMap();
     window.page.removePinsOnMap(pins);
     resetPinMain(adForm);
   }
@@ -59,31 +69,6 @@
       pins.forEach(function (pin) {
         pin.remove();
       });
-    },
-
-    removeCardOnMap: function (map) {
-      var card = map.querySelector('.map__card');
-      if (card) {
-        card.remove();
-      }
-    },
-
-    getCurrentCoordinates: function (pinMain) {
-      var x;
-      var y;
-
-      x = Math.round(parseInt(pinMain.style.left, 10) + window.setting.getPinSize('PIN_MAIN_WIDTH') / 2);
-
-      if (statusPage) {
-        var styleAfterEl = window.getComputedStyle(pinMain, 'after');
-        var positionAfter = parseInt(styleAfterEl.top, 10) + parseInt(styleAfterEl.height, 10);
-
-        y = Math.round(parseInt(pinMain.style.top, 10) + positionAfter);
-        return x + ', ' + y;
-      }
-
-      y = Math.round(parseInt(pinMain.style.top, 10) + window.setting.getPinSize('PIN_MAIN_HEIGHT') / 2);
-      return x + ', ' + y;
     },
 
     setStatusPage: function (status) {
@@ -96,28 +81,24 @@
         .concat(sliceMethod.call(mapFilters.querySelectorAll('fieldset, select')))
         .concat(sliceMethod.call(adForm.querySelectorAll('fieldset')));
 
-      statusPage = status;
+      window.setting.setStatusPage(status);
 
-      var methodName = statusPage ? 'remove' : 'add';
+      var methodName = status ? 'remove' : 'add';
 
       map.classList[methodName]('map--faded');
       adForm.classList[methodName]('ad-form--disabled');
 
       formInteractiveElements.forEach(function (el) {
-        el.disabled = !statusPage;
+        el.disabled = !status;
       });
 
-      if (statusPage === false) {
+      if (status === false) {
         resetPage(pins, adForm, map);
       } else {
         pins.forEach(function (pin) {
           pin.disabled = false;
         });
       }
-    },
-
-    getStatusPage: function () {
-      return statusPage;
     }
   };
 

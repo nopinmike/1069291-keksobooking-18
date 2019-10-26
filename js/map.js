@@ -13,20 +13,20 @@
   }
 
   function onPinClose() {
-    window.page.removeCardOnMap(map);
+    window.card.removeCardOnMap();
     document.removeEventListener('keydown', onPinEsc);
   }
 
   function onPinEsc(evt) {
     if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ESC')) {
-      window.page.removeCardOnMap(map);
+      window.card.removeCardOnMap();
       document.removeEventListener('keydown', onPinEsc);
     }
   }
 
   function onPinClick(ad) {
-    window.page.removeCardOnMap(map);
-    if (window.page.getStatusPage()) {
+    window.card.removeCardOnMap();
+    if (window.setting.getStatusPage()) {
       renderCardOnMap(ad, mapFilters, map);
       var popupClose = map.querySelector('.map__card .popup__close');
       popupClose.addEventListener('click', onPinClose);
@@ -40,8 +40,6 @@
     var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
     var pins = [];
     var allowedAds = window.filter.countPins(ads, pinMain);
-
-    window.page.removePinsOnMap(currentPins);
 
     allowedAds.forEach(function (ad) {
       var pin = window.pin.renderPin(ad, templatePin);
@@ -62,6 +60,7 @@
 
     window.setting.setAds(allowedAds);
     window.setting.setPins(pins);
+    window.page.removePinsOnMap(currentPins);
     mapForPins.appendChild(fragmentForPins);
   }
 
@@ -69,7 +68,7 @@
     var x = shift.x;
     var y = shift.y;
 
-    var statusPage = window.page.getStatusPage();
+    var statusPage = window.setting.getStatusPage();
     var pinMainWidth = pinMain.offsetWidth;
     var heightAfterEl = parseInt(window.getComputedStyle(pinMain, 'after').height, 10);
     var pinMainHeight = (statusPage) ? pinMain.offsetHeight + heightAfterEl : pinMain.offsetHeight;
@@ -122,6 +121,10 @@
   }
 
   function onSuccess(data) {
+
+    function getFunctionRenderPins() {
+      renderPinsOnMap(data);
+    }
 
     pinMain.addEventListener('mousedown', function (evt) {
       var startCoords = {
@@ -188,7 +191,8 @@
         var name = evt.target.name.slice(8, evt.target.name.length);
         var value = evt.target.value;
         window.filter.setFilter(name, value);
-        renderPinsOnMap(data);
+        window.card.removeCardOnMap();
+        window.util.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
       });
     });
 
@@ -198,7 +202,8 @@
         var name = evt.target.value;
         var value = evt.target.checked;
         window.filter.setFilterFeatures(name, value);
-        renderPinsOnMap(data);
+        window.card.removeCardOnMap();
+        window.util.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
       });
     });
 
@@ -210,7 +215,7 @@
     window.setting.setDefaultPinMain(value, [leftPositionPinMain, topPositionPinMain]);
   }
 
-  setDefaultCoordinates(window.page.getCurrentCoordinates(pinMain));
+  setDefaultCoordinates(window.setting.getCurrentCoordinates(pinMain));
   window.page.setStatusPage(false);
   window.form.changeAddress();
   window.backend.load(window.config.getConfig().loadUrl, onSuccess, onError);
