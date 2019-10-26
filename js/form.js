@@ -1,8 +1,6 @@
 'use strict';
 
 (function () {
-  var KEYCODE_ESC = 27;
-
   var adForm = document.querySelector('.ad-form');
   var capacity = adForm.querySelector('#capacity');
   var titleInForm = adForm.querySelector('#title');
@@ -12,31 +10,38 @@
   var timeOutInForm = adForm.querySelector('#timeout');
   var rooms = adForm.querySelector('#room_number');
   var mainBlock = document.querySelector('main');
+  var pinMain = document.querySelector('.map__pin--main');
+
+  var roomsValueToMaxGuests = {
+    '1': ['1'],
+    '2': ['1', '2'],
+    '3': ['1', '2', '3'],
+    '100': ['0']
+  };
+
+  var typeValueHousingToMinPrice = {
+    'bungalo': 0,
+    'flat': 1000,
+    'house': 5000,
+    'palace': 10000
+  };
+
+  var typeValueHousingToText = {
+    'bungalo': 'бунгало',
+    'flat': 'квартиры',
+    'house': 'дома',
+    'palace': 'дворца'
+  };
 
   function checkCapacity() {
-    var maxGuests = 0;
+    var maxGuests = roomsValueToMaxGuests[rooms.value];
+    var textValidity;
+    var flag = maxGuests.find(function (el) {
+      return el === capacity.value;
+    });
 
-    switch (rooms.value) {
-      case '1':
-        maxGuests = 1;
-        break;
-      case '2':
-        maxGuests = 2;
-        break;
-      case '3':
-        maxGuests = 3;
-        break;
-      case '100':
-        maxGuests = 0;
-        break;
-    }
-
-    if (capacity.value > maxGuests) {
-      capacity.setCustomValidity('Такое количество гостей не подходит');
-      return;
-    }
-
-    capacity.setCustomValidity('');
+    textValidity = (flag) ? '' : 'Такое количество гостей не подходит';
+    capacity.setCustomValidity(textValidity);
   }
 
   function onCheckTitle() {
@@ -47,46 +52,31 @@
     if (length >= minLength && length <= maxLength) {
       titleInForm.setCustomValidity('');
       return;
-    } else {
-      titleInForm.setCustomValidity('Некорректная длина ввода');
     }
+    titleInForm.setCustomValidity('Некорректная длина ввода');
   }
 
   function onCheckPrice() {
-    var value = priceInForm.value;
-    var maxValue = 1000000;
-    var minValue = 1000;
     var typeValue = typeInForm.value;
-    var textValue = 'квартиры';
+    var maxPrice = 1000000;
+    var minPrice = typeValueHousingToMinPrice[typeValue];
+    var currentPrice = priceInForm.value;
+    var text = typeValueHousingToText[typeValue];
 
-    switch (typeValue) {
-      case 'bungalo':
-        minValue = 0;
-        textValue = 'бунгало';
-        break;
-      case 'flat':
-        minValue = 1000;
-        textValue = 'квартиры';
-        break;
-      case 'house':
-        minValue = 5000;
-        textValue = 'дома';
-        break;
-      case 'palace':
-        minValue = 10000;
-        textValue = 'дворца';
-        break;
+    priceInForm.placeholder = minPrice;
+
+    if (!currentPrice) {
+      priceInForm.setCustomValidity('Необходимо установить цену');
+      return;
     }
 
-    priceInForm.placeholder = minValue;
-
-    if (value > maxValue) {
+    if (currentPrice > maxPrice) {
       priceInForm.setCustomValidity('Слишком большая цена');
       return;
     }
 
-    if (value < minValue) {
-      priceInForm.setCustomValidity('Слишком низкая цена для ' + textValue);
+    if (currentPrice < minPrice) {
+      priceInForm.setCustomValidity('Слишком низкая цена для ' + text);
       return;
     }
 
@@ -116,7 +106,7 @@
   }
 
   function onEscSuccessMessage(evt) {
-    if (evt.keyCode === KEYCODE_ESC) {
+    if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ESC')) {
       var successBlock = mainBlock.querySelector('.success');
       if (successBlock) {
         successBlock.remove();
@@ -153,7 +143,7 @@
   }
 
   function onSuccess() {
-    window.setting.resetPage();
+    window.page.setStatusPage(false);
     showSuccessMessage();
   }
 
@@ -190,7 +180,7 @@
   window.form = {
     changeAddress: function () {
       var addressInput = adForm.querySelector('#address');
-      var addressValue = window.setting.getCurrentCoordinates();
+      var addressValue = window.page.getCurrentCoordinates(pinMain);
       addressInput.readOnly = true;
       addressInput.value = addressValue;
     }
