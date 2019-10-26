@@ -177,6 +177,11 @@
     window.backend.save(window.config.getConfig().saveUrl, new FormData(adForm), onSuccess, onError);
   });
 
+  adForm.addEventListener('reset', function (evt) {
+    evt.preventDefault();
+    window.page.setStatusPage(false);
+  });
+
   window.form = {
     changeAddress: function () {
       var addressInput = adForm.querySelector('#address');
