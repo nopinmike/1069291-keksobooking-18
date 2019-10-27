@@ -27,14 +27,28 @@
     bottom: 630
   };
 
-  // var adForm = document.querySelector('.ad-form');
-  // var map = document.querySelector('.map');
-  // var mapFilters = map.querySelector('.map__filters-container');
+  var dataUrl = {
+    loadUrl: 'https://js.dump.academy/keksobooking/data',
+    saveUrl: 'https://js.dump.academy/keksobooking',
+  };
+
+  var lastTimeout;
 
   var pins = [];
   var ads = [];
 
   window.setting = {
+    debounce: function (fun, interval) {
+      if (lastTimeout) {
+        clearTimeout(lastTimeout);
+      }
+      lastTimeout = setTimeout(fun, interval);
+    },
+
+    getDataUrl: function () {
+      return dataUrl;
+    },
+
     setStatusPage: function (value) {
       statusPage = value;
     },
@@ -89,21 +103,34 @@
     },
 
     getCurrentCoordinates: function (pinMain) {
-      var x;
-      var y;
+      var coordinates = {
+        x: null,
+        y: null
+      };
 
-      x = Math.round(parseInt(pinMain.style.left, 10) + window.setting.getPinSize('PIN_MAIN_WIDTH') / 2);
+      var coordinatePositionToSide = {
+        x: 'PIN_MAIN_WIDTH',
+        y: 'PIN_MAIN_HEIGHT'
+      };
 
-      if (statusPage) {
-        var styleAfterEl = window.getComputedStyle(pinMain, 'after');
-        var positionAfter = parseInt(styleAfterEl.top, 10) + parseInt(styleAfterEl.height, 10);
+      var coordinatePositionToStylePosition = {
+        x: 'left',
+        y: 'top'
+      };
 
-        y = Math.round(parseInt(pinMain.style.top, 10) + positionAfter);
-        return x + ', ' + y;
-      }
+      var numberSystem = 10;
 
-      y = Math.round(parseInt(pinMain.style.top, 10) + window.setting.getPinSize('PIN_MAIN_HEIGHT') / 2);
-      return x + ', ' + y;
+      Object.keys(coordinates).forEach(function (el) {
+        if (statusPage && el === 'y') {
+          var styleAfterEl = window.getComputedStyle(pinMain, 'after');
+          var positionAfter = parseInt(styleAfterEl.top, numberSystem) + parseInt(styleAfterEl.height, numberSystem);
+          coordinates[el] = Math.round(parseInt(pinMain.style.top, numberSystem) + positionAfter);
+          return;
+        }
+        coordinates[el] = Math.round(parseInt(pinMain.style[coordinatePositionToStylePosition[el]], numberSystem) + window.setting.getPinSize(coordinatePositionToSide[el]) / 2);
+      });
+
+      return coordinates.x + ', ' + coordinates.y;
     },
   };
 

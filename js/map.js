@@ -105,7 +105,7 @@
 
     function onReload(evt) {
       evt.preventDefault();
-      window.backend.load(window.config.getConfig().loadUrl, onSuccess, onError);
+      window.backend.load(window.setting.getDataUrl().loadUrl, onSuccess, onError);
       buttonError.removeEventListener('click', onReload);
       blockError.remove();
     }
@@ -192,7 +192,7 @@
         var value = evt.target.value;
         window.filter.setFilter(name, value);
         window.card.removeCardOnMap();
-        window.util.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
+        window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
       });
     });
 
@@ -203,7 +203,7 @@
         var value = evt.target.checked;
         window.filter.setFilterFeatures(name, value);
         window.card.removeCardOnMap();
-        window.util.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
+        window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
       });
     });
 
@@ -218,6 +218,6 @@
   setDefaultCoordinates(window.setting.getCurrentCoordinates(pinMain));
   window.page.setStatusPage(false);
   window.form.changeAddress();
-  window.backend.load(window.config.getConfig().loadUrl, onSuccess, onError);
+  window.backend.load(window.setting.getDataUrl().loadUrl, onSuccess, onError);
 
 })();

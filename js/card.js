@@ -31,16 +31,12 @@
   }
 
   function checkingData(el, data) {
-    try {
-      if (data && typeof data !== 'object') {
-        return data;
-      } else if (typeof data === 'object' && data.length) {
-        return data;
-      }
-      el.remove();
-    } catch (err) {
-      el.remove();
+    if (data && typeof data !== 'object') {
+      return data;
+    } else if (typeof data === 'object' && data.length) {
+      return data;
     }
+    el.remove();
 
     return data;
   }

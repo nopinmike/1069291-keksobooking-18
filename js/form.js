@@ -131,7 +131,7 @@
 
     function onReload(evt) {
       evt.preventDefault();
-      window.backend.save(window.config.getConfig().saveUrl, new FormData(adForm), onSuccess, onError);
+      window.backend.save(window.setting.getDataUrl().saveUrl, new FormData(adForm), onSuccess, onError);
       buttonError.removeEventListener('click', onReload);
       errorBlock.remove();
     }
@@ -174,7 +174,7 @@
 
   adForm.addEventListener('submit', function (evt) {
     evt.preventDefault();
-    window.backend.save(window.config.getConfig().saveUrl, new FormData(adForm), onSuccess, onError);
+    window.backend.save(window.setting.getDataUrl().saveUrl, new FormData(adForm), onSuccess, onError);
   });
 
   adForm.addEventListener('reset', function (evt) {
