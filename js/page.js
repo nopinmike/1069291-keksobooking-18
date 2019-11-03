@@ -1,17 +1,15 @@
 'use strict';
 
+var map = document.querySelector('.map');
+var mapFilters = map.querySelector('.map__filters-container');
+var filterFields = mapFilters.querySelectorAll('fieldset, select')
+var adForm = document.querySelector('.ad-form');
+var formFields = adForm.querySelectorAll('fieldset');
+var pinMain = document.querySelector('.map__pin--main');
+var filters = map.querySelector('.map__filters');
+
 (function () {
-
-  var selectNameToValue = {
-    type: 'flat',
-    timein: '12:00',
-    timeout: '12:00',
-    rooms: '1',
-    capacity: '3'
-  };
-
-  function resetPinMain(adForm) {
-    var pinMain = document.querySelector('.map__pin--main');
+  function resetPinMain() {
     var defaultPinMain = window.setting.getDefaultPinMain();
     if (defaultPinMain.defaultCoordinates) {
       var address = adForm.querySelector('#address');
@@ -21,46 +19,12 @@
     }
   }
 
-  function resetPage(pins, adForm, map) {
-    var selectFilters = map.querySelectorAll('.map__filter');
-    var featuresFilters = map.querySelectorAll('input[name="features"]');
-    var fields = adForm.querySelectorAll('input, textarea');
-    var selects = adForm.querySelectorAll('select');
-    var filterMethod = [].filter;
-    var findMethod = [].find;
-
-    selectFilters.forEach(function (filter) {
-      filter.value = 'any';
-    });
-
-    featuresFilters.forEach(function (filter) {
-      filter.checked = false;
-    });
-
-    window.filter.resetFilters();
-
-    filterMethod.call(fields, function (field) {
-      return field.type === 'text' || field.type === 'number' || field.type === 'file';
-    }).forEach(function (field) {
-      field.value = '';
-    });
-
-    filterMethod.call(fields, function (field) {
-      return field.type === 'checkbox';
-    }).forEach(function (field) {
-      field.checked = false;
-    });
-
-    findMethod.call(fields, function (field) {
-      return field.type === 'number';
-    }).placeholder = '1000';
-
-    selects.forEach(function (select) {
-      select.value = selectNameToValue[select.name];
-    });
-
-    window.card.removeCardOnMap();
+  function resetPage(pins) {
+    adForm.reset();
+    filters.reset();
+    window.card.removeOnMap();
     window.page.removePinsOnMap(pins);
+    window.filter.reset();
     resetPinMain(adForm);
   }
 
@@ -71,15 +35,12 @@
       });
     },
 
-    setStatusPage: function (status) {
-      var map = document.querySelector('.map');
-      var mapFilters = map.querySelector('.map__filters-container');
-      var adForm = document.querySelector('.ad-form');
+    setStatus: function (status) {
       var sliceMethod = Array.prototype.slice;
       var pins = window.setting.getPins();
       var formInteractiveElements = []
-        .concat(sliceMethod.call(mapFilters.querySelectorAll('fieldset, select')))
-        .concat(sliceMethod.call(adForm.querySelectorAll('fieldset')));
+        .concat(sliceMethod.call(filterFields))
+        .concat(sliceMethod.call(formFields));
 
       window.setting.setStatusPage(status);
 
@@ -93,7 +54,7 @@
       });
 
       if (status === false) {
-        resetPage(pins, adForm, map);
+        resetPage(pins);
       } else {
         pins.forEach(function (pin) {
           pin.disabled = false;

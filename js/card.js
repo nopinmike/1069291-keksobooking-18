@@ -8,26 +8,26 @@
   function setFeaturesForCard(featureList, featuresNode) {
     featuresNode.textContent = '';
 
-    for (var i = 0; i < featureList.length; i++) {
+    featureList.forEach(function (name) {
       var feature = document.createElement('li');
       feature.classList.add('popup__feature');
-      feature.classList.add('popup__feature--' + featureList[i]);
+      feature.classList.add('popup__feature--' + name);
       featuresNode.appendChild(feature);
-    }
+    });
   }
 
   function setPhotosForCard(photosList, photosNode) {
     photosNode.textContent = '';
 
-    for (var i = 0; i < photosList.length; i++) {
+    photosList.forEach(function (src) {
       var photo = document.createElement('img');
       photo.classList.add('popup__photo');
       photo.setAttribute('width', WIDTH_PHOTO_IN_POPUP);
       photo.setAttribute('height', HEIGHT_PHOTO_IN_POPUP);
-      photo.setAttribute('src', photosList[i]);
+      photo.setAttribute('src', src);
       photo.setAttribute('alt', 'Фотография жилья');
       photosNode.appendChild(photo);
-    }
+    });
   }
 
   function checkingData(el, data) {
@@ -42,14 +42,14 @@
   }
 
   window.card = {
-    removeCardOnMap: function () {
+    removeOnMap: function () {
       var card = document.querySelector('.map__card');
       if (card) {
         card.remove();
       }
     },
 
-    renderCard: function (ad, template) {
+    getReady: function (ad, template) {
       var card = template.cloneNode(true);
       var title = card.querySelector('.popup__title');
       var address = card.querySelector('.popup__text--address');

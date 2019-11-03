@@ -2,6 +2,7 @@
 
 (function () {
   var DEBOUNCE_INTERVAL = 500;
+  var NUMBER_SYSTEM = 10;
 
   var statusPage = false;
 
@@ -38,11 +39,11 @@
   var ads = [];
 
   window.setting = {
-    debounce: function (fun, interval) {
+    debounce: function (callback, interval) {
       if (lastTimeout) {
         clearTimeout(lastTimeout);
       }
-      lastTimeout = setTimeout(fun, interval);
+      lastTimeout = setTimeout(callback, interval);
     },
 
     getDataUrl: function () {
@@ -118,16 +119,14 @@
         y: 'top'
       };
 
-      var numberSystem = 10;
-
       Object.keys(coordinates).forEach(function (el) {
         if (statusPage && el === 'y') {
           var styleAfterEl = window.getComputedStyle(pinMain, 'after');
-          var positionAfter = parseInt(styleAfterEl.top, numberSystem) + parseInt(styleAfterEl.height, numberSystem);
-          coordinates[el] = Math.round(parseInt(pinMain.style.top, numberSystem) + positionAfter);
+          var positionAfter = parseInt(styleAfterEl.top, NUMBER_SYSTEM) + parseInt(styleAfterEl.height, NUMBER_SYSTEM);
+          coordinates[el] = Math.round(parseInt(pinMain.style.top, NUMBER_SYSTEM) + positionAfter);
           return;
         }
-        coordinates[el] = Math.round(parseInt(pinMain.style[coordinatePositionToStylePosition[el]], numberSystem) + window.setting.getPinSize(coordinatePositionToSide[el]) / 2);
+        coordinates[el] = Math.round(parseInt(pinMain.style[coordinatePositionToStylePosition[el]], NUMBER_SYSTEM) + window.setting.getPinSize(coordinatePositionToSide[el]) / 2);
       });
 
       return coordinates.x + ', ' + coordinates.y;

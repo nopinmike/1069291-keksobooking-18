@@ -1,7 +1,12 @@
 'use strict';
 
 (function () {
+  var MIN_LENGTH = 30;
+  var MAX_LENGTH = 100;
+  var MAX_PRICE = 1000000;
+
   var adForm = document.querySelector('.ad-form');
+  var reset = adForm.querySelector('.ad-form__reset');
   var capacity = adForm.querySelector('#capacity');
   var titleInForm = adForm.querySelector('#title');
   var priceInForm = adForm.querySelector('#price');
@@ -11,6 +16,9 @@
   var rooms = adForm.querySelector('#room_number');
   var mainBlock = document.querySelector('main');
   var pinMain = document.querySelector('.map__pin--main');
+  var templateSuccess = document.querySelector('#success').content.querySelector('.success');
+  var templateError = document.querySelector('#error').content.querySelector('.error');
+  var addressInput = adForm.querySelector('#address');
 
   var roomsValueToMaxGuests = {
     '1': ['1'],
@@ -44,21 +52,26 @@
     capacity.setCustomValidity(textValidity);
   }
 
-  function onCheckTitle() {
+  function onTitleChange() {
     var length = titleInForm.value.length;
-    var minLength = 30;
-    var maxLength = 100;
 
-    if (length >= minLength && length <= maxLength) {
+    if (length >= MIN_LENGTH && length <= MAX_LENGTH) {
       titleInForm.setCustomValidity('');
       return;
     }
     titleInForm.setCustomValidity('Некорректная длина ввода');
   }
 
-  function onCheckPrice() {
+  function onPriceChange() {
+    checkPrice();
+  }
+
+  function onTypeChange() {
+    checkPrice();
+  }
+
+  function checkPrice() {
     var typeValue = typeInForm.value;
-    var maxPrice = 1000000;
     var minPrice = typeValueHousingToMinPrice[typeValue];
     var currentPrice = priceInForm.value;
     var text = typeValueHousingToText[typeValue];
@@ -70,7 +83,7 @@
       return;
     }
 
-    if (currentPrice > maxPrice) {
+    if (currentPrice > MAX_PRICE) {
       priceInForm.setCustomValidity('Слишком большая цена');
       return;
     }
@@ -83,7 +96,7 @@
     priceInForm.setCustomValidity('');
   }
 
-  function onCheckTime(evt) {
+  function onTimeChange(evt) {
     var eventTimeId = evt.target.id;
     var newValue = evt.target.value;
 
@@ -97,57 +110,57 @@
     }
   }
 
-  function onClickSuccessMessage() {
+  function onSuccessMessageClick() {
     var successBlock = mainBlock.querySelector('.success');
     if (successBlock) {
       successBlock.remove();
     }
-    document.removeEventListener('click', onClickSuccessMessage);
+    document.removeEventListener('click', onSuccessMessageClick);
+    document.removeEventListener('keydown', onSuccessMessageKeydown);
   }
 
-  function onEscSuccessMessage(evt) {
+  function onSuccessMessageKeydown(evt) {
+    var successBlock = mainBlock.querySelector('.success');
     if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ESC')) {
-      var successBlock = mainBlock.querySelector('.success');
       if (successBlock) {
         successBlock.remove();
       }
-      document.removeEventListener('keydown', onEscSuccessMessage);
+      document.removeEventListener('click', onSuccessMessageClick);
+      document.removeEventListener('keydown', onSuccessMessageKeydown);
     }
   }
 
   function showSuccessMessage() {
-    var templateSuccess = document.querySelector('#success').content.querySelector('.success');
-    var successBlock = templateSuccess.cloneNode(true);
-    mainBlock.appendChild(successBlock);
-    document.addEventListener('click', onClickSuccessMessage);
-    document.addEventListener('keydown', onEscSuccessMessage);
+    var newSuccessBlock = templateSuccess.cloneNode(true);
+    mainBlock.appendChild(newSuccessBlock);
+    document.addEventListener('click', onSuccessMessageClick);
+    document.addEventListener('keydown', onSuccessMessageKeydown);
   }
 
   function showErrorMessage(message) {
-    var templateError = document.querySelector('#error').content.querySelector('.error');
     var errorBlock = templateError.cloneNode(true);
     var blockTextError = errorBlock.querySelector('.error__message');
     var buttonError = errorBlock.querySelector('.error__button');
 
-    function onReload(evt) {
+    function onButtonErrorClick(evt) {
       evt.preventDefault();
-      window.backend.save(window.setting.getDataUrl().saveUrl, new FormData(adForm), onSuccess, onError);
-      buttonError.removeEventListener('click', onReload);
+      window.serverAccess('POST', window.setting.getDataUrl().saveUrl, withSuccess, withError, new FormData(adForm));
+      buttonError.removeEventListener('click', onButtonErrorClick);
       errorBlock.remove();
     }
 
     blockTextError.textContent = message;
     mainBlock.appendChild(errorBlock);
 
-    buttonError.addEventListener('click', onReload);
+    buttonError.addEventListener('click', onButtonErrorClick);
   }
 
-  function onSuccess() {
-    window.page.setStatusPage(false);
+  function withSuccess() {
+    window.page.setStatus(false);
     showSuccessMessage();
   }
 
-  function onError(message) {
+  function withError(message) {
     showErrorMessage(message);
   }
 
@@ -160,35 +173,32 @@
   });
 
   titleInForm.required = true;
-  titleInForm.addEventListener('change', onCheckTitle);
+  titleInForm.addEventListener('change', onTitleChange);
 
   priceInForm.required = true;
-  priceInForm.addEventListener('change', onCheckPrice);
-  typeInForm.addEventListener('change', onCheckPrice);
+  priceInForm.addEventListener('change', onPriceChange);
+  typeInForm.addEventListener('change', onTypeChange);
 
-  timeInForm.addEventListener('change', onCheckTime);
-  timeOutInForm.addEventListener('change', onCheckTime);
+  timeInForm.addEventListener('change', onTimeChange);
+  timeOutInForm.addEventListener('change', onTimeChange);
 
   checkCapacity();
-  onCheckPrice();
+  checkPrice();
 
   adForm.addEventListener('submit', function (evt) {
     evt.preventDefault();
-    window.backend.save(window.setting.getDataUrl().saveUrl, new FormData(adForm), onSuccess, onError);
+    window.serverAccess('POST', window.setting.getDataUrl().saveUrl, withSuccess, withError, new FormData(adForm));
   });
 
-  adForm.addEventListener('reset', function (evt) {
+  reset.addEventListener('click', function (evt) {
     evt.preventDefault();
-    window.page.setStatusPage(false);
+    window.page.setStatus(false);
   });
 
-  window.form = {
-    changeAddress: function () {
-      var addressInput = adForm.querySelector('#address');
-      var addressValue = window.setting.getCurrentCoordinates(pinMain);
-      addressInput.readOnly = true;
-      addressInput.value = addressValue;
-    }
+  window.changeAddress = function () {
+    var addressValue = window.setting.getCurrentCoordinates(pinMain);
+    addressInput.readOnly = true;
+    addressInput.value = addressValue;
   };
 
 })();

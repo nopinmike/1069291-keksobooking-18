@@ -1,60 +1,40 @@
 'use strict';
 
+var ERROR_MESSAGE = 'Произошла ошибка соединения';
+var TIMEOUT = 10000;
+var SUCCESS_STATUS = 200;
+
 (function () {
+  window.serverAccess = function (type, url, onSuccess, onError, data) {
+    var xhr = new XMLHttpRequest();
 
-  window.backend = {
-    load: function (url, onSuccess, onError) {
-      var xhr = new XMLHttpRequest();
+    xhr.responseType = 'json';
 
-      xhr.responseType = 'json';
+    xhr.addEventListener('load', function () {
+      if (xhr.status === SUCCESS_STATUS) {
+        onSuccess(xhr.response);
+      } else {
+        onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
+      }
+    });
 
-      xhr.addEventListener('load', function () {
-        if (xhr.status === 200) {
-          onSuccess(xhr.response);
-        } else {
-          onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
-        }
-      });
+    xhr.addEventListener('error', function () {
+      onError(ERROR_MESSAGE);
+    });
 
-      xhr.addEventListener('error', function () {
-        onError('Произошла ошибка соединения');
-      });
+    xhr.addEventListener('timeout', function () {
+      onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
+    });
 
-      xhr.addEventListener('timeout', function () {
-        onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
-      });
+    xhr.timeout = TIMEOUT;
 
-      xhr.timeout = 10000;
+    xhr.open(type, url);
 
-      xhr.open('GET', url);
-      xhr.send();
-    },
-
-    save: function (url, data, onSuccess, onError) {
-      var xhr = new XMLHttpRequest();
-      xhr.responseType = 'json';
-
-      xhr.addEventListener('load', function () {
-        if (xhr.status === 200) {
-          onSuccess(xhr.response);
-        } else {
-          onError('Статус ответа: ' + xhr.status + ' ' + xhr.statusText);
-        }
-      });
-
-      xhr.addEventListener('error', function () {
-        onError('Произошла ошибка соединения');
-      });
-
-      xhr.addEventListener('timeout', function () {
-        onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
-      });
-
-      xhr.timeout = 10000;
-
-      xhr.open('POST', url);
+    if (data) {
       xhr.send(data);
+      return;
     }
-  };
 
+    xhr.send();
+  };
 })();

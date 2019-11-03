@@ -41,7 +41,7 @@
   }
 
   window.filter = {
-    resetFilters: function () {
+    reset: function () {
       Object.keys(filters).forEach(function (filter) {
         filters[filter] = 'any';
       });
@@ -51,15 +51,16 @@
       });
     },
 
-    setFilter: function (key, value) {
+    set: function (key, value) {
       filters[key] = value;
     },
 
-    setFilterFeatures: function (key, value) {
+    setFeatures: function (key, value) {
       filterFeatures[key] = value;
     },
 
     countPins: function (ads, pinMain) {
+      var MAX_ADS = 5;
       var currentCoordinatesPinMain = window.setting.getCurrentCoordinates(pinMain).split(', ').map(function (el) {
         return parseInt(el, 10);
       });
@@ -105,7 +106,7 @@
 
       newAds.sort(function (a, b) {
         return compareNumeric(a.points, b.points);
-      }).splice(5, newAds.length - 1);
+      }).splice(MAX_ADS, newAds.length - 1);
 
       return newAds;
     }

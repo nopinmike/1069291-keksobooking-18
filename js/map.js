@@ -1,48 +1,73 @@
 'use strict';
 
 (function () {
+  var START_SYMBOL_FILTER_NAME = 8;
+
   var map = document.querySelector('.map');
   var mapForPins = map.querySelector('.map__pins');
   var pinMain = document.querySelector('.map__pin--main');
   var mapFilters = map.querySelector('.map__filters-container');
+  var selectFilters = mapFilters.querySelectorAll('.map__filter');
+  var featuresFilters = mapFilters.querySelectorAll('input[name="features"]');
+  var mainBlock = document.querySelector('main');
+  var templateCard = document.querySelector('#card').content.querySelector('.map__card');
+  var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
+  var templateError = document.querySelector('#error').content.querySelector('.error');
+
+  var serverData = {};
 
   function renderCardOnMap(ad, filtersForMap, mapBlock) {
-    var templateCard = document.querySelector('#card').content.querySelector('.map__card');
-    var card = window.card.renderCard(ad, templateCard);
+    var card = window.card.getReady(ad, templateCard);
     mapBlock.insertBefore(card, filtersForMap);
   }
 
-  function onPinClose() {
-    window.card.removeCardOnMap();
-    document.removeEventListener('keydown', onPinEsc);
+  function onPopupClick() {
+    window.card.removeOnMap();
+    document.removeEventListener('keydown', onPopupKeydown);
   }
 
-  function onPinEsc(evt) {
+  function onPopupKeydown(evt) {
     if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ESC')) {
-      window.card.removeCardOnMap();
-      document.removeEventListener('keydown', onPinEsc);
+      window.card.removeOnMap();
+      document.removeEventListener('keydown', onPopupKeydown);
     }
   }
 
   function onPinClick(ad) {
-    window.card.removeCardOnMap();
+    window.card.removeOnMap();
     if (window.setting.getStatusPage()) {
       renderCardOnMap(ad, mapFilters, map);
       var popupClose = map.querySelector('.map__card .popup__close');
-      popupClose.addEventListener('click', onPinClose);
-      document.addEventListener('keydown', onPinEsc);
+      popupClose.addEventListener('click', onPopupClick);
+      document.addEventListener('keydown', onPopupKeydown);
     }
   }
 
-  function renderPinsOnMap(ads) {
+  function withError(message) {
+    showErrorMessage(message);
+  }
+
+  function withSuccess(data) {
+    serverData = data;
+    renderPinsOnMap();
+  }
+
+  function getAds() {
+    if (!Object.keys(serverData).length) {
+      window.serverAccess('GET', window.setting.getDataUrl().loadUrl, withSuccess, withError);
+    } else {
+      renderPinsOnMap();
+    }
+  }
+
+  function renderPinsOnMap() {
     var currentPins = window.setting.getPins();
     var fragmentForPins = document.createDocumentFragment();
-    var templatePin = document.querySelector('#pin').content.querySelector('.map__pin');
     var pins = [];
-    var allowedAds = window.filter.countPins(ads, pinMain);
+    var allowedAds = window.filter.countPins(serverData, pinMain);
 
     allowedAds.forEach(function (ad) {
-      var pin = window.pin.renderPin(ad, templatePin);
+      var pin = window.renderPin(ad, templatePin);
       if (!pin) {
         return;
       }
@@ -84,12 +109,12 @@
       left = map.offsetWidth - pinMainWidth / 2;
     }
 
-    if (top < 130 - pinMainHeight) {
-      top = 130 - pinMainHeight;
+    if (top < window.setting.getHeightRestrictions().top - pinMainHeight) {
+      top = window.setting.getHeightRestrictions().top - pinMainHeight;
     }
 
-    if (top > 630 - pinMainHeight) {
-      top = 630 - pinMainHeight;
+    if (top > window.setting.getHeightRestrictions().bottom - pinMainHeight) {
+      top = window.setting.getHeightRestrictions().bottom - pinMainHeight;
     }
 
     pinMain.style.left = left + 'px';
@@ -97,116 +122,25 @@
   }
 
   function showErrorMessage(message) {
-    var mainBlock = document.querySelector('main');
-    var templateError = document.querySelector('#error').content.querySelector('.error');
     var blockError = templateError.cloneNode(true);
     var blockTextError = blockError.querySelector('.error__message');
     var buttonError = blockError.querySelector('.error__button');
 
-    function onReload(evt) {
+    function onButtonErrorClick(evt) {
       evt.preventDefault();
-      window.backend.load(window.setting.getDataUrl().loadUrl, onSuccess, onError);
-      buttonError.removeEventListener('click', onReload);
+      window.serverAccess('GET', window.setting.getDataUrl().loadUrl, withSuccess, withError);
+      buttonError.removeEventListener('click', onButtonErrorClick);
       blockError.remove();
     }
 
     blockTextError.textContent = message;
     mainBlock.appendChild(blockError);
 
-    buttonError.addEventListener('click', onReload);
+    buttonError.addEventListener('click', onButtonErrorClick);
   }
 
-  function onError(message) {
-    showErrorMessage(message);
-  }
-
-  function onSuccess(data) {
-
-    function getFunctionRenderPins() {
-      renderPinsOnMap(data);
-    }
-
-    pinMain.addEventListener('mousedown', function (evt) {
-      var startCoords = {
-        x: evt.clientX,
-        y: evt.clientY
-      };
-
-      var dragged = false;
-
-      function onMouseMove(moveEvt) {
-        moveEvt.preventDefault();
-        dragged = true;
-
-        var shift = {
-          x: startCoords.x - moveEvt.clientX,
-          y: startCoords.y - moveEvt.clientY
-        };
-
-        startCoords = {
-          x: moveEvt.clientX,
-          y: moveEvt.clientY
-        };
-
-        setPinMainCoordinates(shift);
-      }
-
-      function onMouseUp(upEvt) {
-        upEvt.preventDefault();
-
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-
-        if (dragged) {
-          var onClickPreventDefault = function (clickEvt) {
-            clickEvt.preventDefault();
-            pinMain.removeEventListener('click', onClickPreventDefault);
-          };
-          pinMain.addEventListener('click', onClickPreventDefault);
-        }
-
-        window.form.changeAddress();
-        renderPinsOnMap(data);
-      }
-
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-
-      window.page.setStatusPage(true);
-
-      window.form.changeAddress();
-    });
-
-    pinMain.addEventListener('keydown', function (evt) {
-      if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ENTER')) {
-        renderPinsOnMap(data);
-        window.page.setStatusPage(true);
-        window.form.changeAddress();
-      }
-    });
-
-    var selectFilters = mapFilters.querySelectorAll('.map__filter');
-    selectFilters.forEach(function (filter) {
-      filter.addEventListener('change', function (evt) {
-        var name = evt.target.name.slice(8, evt.target.name.length);
-        var value = evt.target.value;
-        window.filter.setFilter(name, value);
-        window.card.removeCardOnMap();
-        window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
-      });
-    });
-
-    var featuresFilters = mapFilters.querySelectorAll('input[name="features"]');
-    featuresFilters.forEach(function (filter) {
-      filter.addEventListener('change', function (evt) {
-        var name = evt.target.value;
-        var value = evt.target.checked;
-        window.filter.setFilterFeatures(name, value);
-        window.card.removeCardOnMap();
-        window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
-      });
-    });
-
+  function getFunctionRenderPins() {
+    getAds();
   }
 
   function setDefaultCoordinates(value) {
@@ -215,9 +149,89 @@
     window.setting.setDefaultPinMain(value, [leftPositionPinMain, topPositionPinMain]);
   }
 
+  pinMain.addEventListener('mousedown', function (evt) {
+    var startCoords = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+
+    var dragged = false;
+
+    function onMouseMove(moveEvt) {
+      moveEvt.preventDefault();
+      dragged = true;
+
+      var shift = {
+        x: startCoords.x - moveEvt.clientX,
+        y: startCoords.y - moveEvt.clientY
+      };
+
+      startCoords = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+
+      setPinMainCoordinates(shift);
+      window.changeAddress();
+    }
+
+    function onMouseUp(upEvt) {
+
+      function onPinMainClick(clickEvt) {
+        clickEvt.preventDefault();
+        pinMain.removeEventListener('click', onPinMainClick);
+      }
+
+      upEvt.preventDefault();
+
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+
+      if (dragged) {
+        pinMain.addEventListener('click', onPinMainClick);
+      }
+
+      getAds();
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    window.page.setStatus(true);
+
+    window.changeAddress();
+  });
+
+  pinMain.addEventListener('keydown', function (evt) {
+    if (evt.keyCode === window.setting.getKeyCode('KEYCODE_ENTER')) {
+      getAds();
+      window.page.setStatus(true);
+      window.changeAddress();
+    }
+  });
+
+  selectFilters.forEach(function (filter) {
+    filter.addEventListener('change', function (evt) {
+      var name = evt.target.name.slice(START_SYMBOL_FILTER_NAME, evt.target.name.length);
+      var value = evt.target.value;
+      window.filter.set(name, value);
+      window.card.removeOnMap();
+      window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
+    });
+  });
+
+  featuresFilters.forEach(function (filter) {
+    filter.addEventListener('change', function (evt) {
+      var name = evt.target.value;
+      var value = evt.target.checked;
+      window.filter.setFeatures(name, value);
+      window.card.removeOnMap();
+      window.setting.debounce(getFunctionRenderPins, window.setting.getDebounceInterval());
+    });
+  });
+
   setDefaultCoordinates(window.setting.getCurrentCoordinates(pinMain));
-  window.page.setStatusPage(false);
-  window.form.changeAddress();
-  window.backend.load(window.setting.getDataUrl().loadUrl, onSuccess, onError);
+  window.page.setStatus(false);
+  window.changeAddress();
 
 })();
