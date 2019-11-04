@@ -4,6 +4,7 @@
   var MIN_LENGTH = 30;
   var MAX_LENGTH = 100;
   var MAX_PRICE = 1000000;
+  var FILE_TYPES = ['gif', 'jpg', 'jpeg', 'png'];
 
   var adForm = document.querySelector('.ad-form');
   var reset = adForm.querySelector('.ad-form__reset');
@@ -19,6 +20,15 @@
   var templateSuccess = document.querySelector('#success').content.querySelector('.success');
   var templateError = document.querySelector('#error').content.querySelector('.error');
   var addressInput = adForm.querySelector('#address');
+  var avatarBlock = adForm.querySelector('.ad-form-header__upload');
+  var avatarField = avatarBlock.querySelector('.ad-form-header__input');
+  var avatarPreview = avatarBlock.querySelector('.ad-form-header__preview img');
+  var housingPhoto = adForm.querySelector('.ad-form__photo-container');
+  var housingPhotoField = housingPhoto.querySelector('.ad-form__input');
+  var housingPhotoPreview = housingPhoto.querySelector('.ad-form__photo');
+
+  var housingPhotoWidth = housingPhotoPreview.offsetWidth;
+  var housingPhotoHeight = housingPhotoPreview.offsetHeight;
 
   var roomsValueToMaxGuests = {
     '1': ['1'],
@@ -110,6 +120,42 @@
     }
   }
 
+  function setFile(file, callback) {
+    var fileName = file.name.toLowerCase();
+
+    var check = FILE_TYPES.some(function (type) {
+      return fileName.endsWith(type);
+    });
+
+    if (check) {
+      var reader = new FileReader();
+
+      reader.addEventListener('load', function () {
+        callback(reader);
+      });
+
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function setAvatar(reader) {
+    avatarPreview.src = reader.result;
+  }
+
+  function setPhoto(reader) {
+    var oldPicture = housingPhotoPreview.querySelector('img');
+    var image = document.createElement('img');
+
+    if (oldPicture) {
+      oldPicture.remove();
+    }
+
+    image.src = reader.result;
+    image.width = housingPhotoWidth;
+    image.height = housingPhotoHeight;
+    housingPhotoPreview.append(image);
+  }
+
   function onSuccessMessageClick() {
     var successBlock = mainBlock.querySelector('.success');
     if (successBlock) {
@@ -181,6 +227,14 @@
 
   timeInForm.addEventListener('change', onTimeChange);
   timeOutInForm.addEventListener('change', onTimeChange);
+
+  avatarField.addEventListener('change', function (evt) {
+    setFile(evt.target.files[0], setAvatar);
+  });
+
+  housingPhotoField.addEventListener('change', function (evt) {
+    setFile(evt.target.files[0], setPhoto);
+  });
 
   checkCapacity();
   checkPrice();
